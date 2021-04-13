@@ -3,7 +3,7 @@
 # Script for comparing stored fixity value with generated value
 
 #call file ref as argument:
-# $ ./integ_dl_check.sh a79cdbec-506a-486a-aa69-692b3d18ef3c 
+# $ ./file_preservica_fixity.sh username a79cdbec-506a-486a-aa69-692b3d18ef3c 
 
 
 # Preservica API calls to download local copy of file and metadata
@@ -11,7 +11,7 @@
 
 
 # set base url for you preservica enviroment
-base_url='https://yul-pres-tsdb.library.yale.edu'
+base_url='https://'
 
 
 # create temporary data directory
@@ -19,21 +19,21 @@ mkdir ./temp_data
 
 # for username/password prompt, remove n from curl option and add -u username
 
-curl -nsk -o ./temp_data/$1 $base_url/api/entity/digitalFileContents/$1
+curl -k -o ./temp_data/$2 $base_url/api/entity/digitalFileContents/$2 -u $1
 
-curl -nsk -o ./temp_data/$1.xml $base_url/api/entity/digitalFiles/$1
+curl -k -o ./temp_data/$2.xml $base_url/api/entity/digitalFiles/$2 -u $1
 
 echo '====================================='
-echo 'File Ref: ' $1
+echo 'File Ref: ' $2
 
 
 # get values from metadata xml
 
-stored_fixity=$(grep '<FixityValue>' ./temp_data/$1.xml | sed "s@.*<FixityValue>\(.*\)</FixityValue>.*@\1@")
+stored_fixity=$(grep '<FixityValue>' ./temp_data/$2.xml | sed "s@.*<FixityValue>\(.*\)</FixityValue>.*@\1@")
 
-fixity_algo=$(grep 'FixityAlgorithmRef' ./temp_data/$1.xml | sed "s@.*<FixityAlgorithmRef>\(.*\)</FixityAlgorithmRef>.*@\1@")
+fixity_algo=$(grep 'FixityAlgorithmRef' ./temp_data/$2.xml | sed "s@.*<FixityAlgorithmRef>\(.*\)</FixityAlgorithmRef>.*@\1@")
 
-filename=$(grep '<FileName>' ./temp_data/$1.xml | sed "s@.*<FileName>\(.*\)</FileName>.*@\1@")
+filename=$(grep '<FileName>' ./temp_data/$2.xml | sed "s@.*<FileName>\(.*\)</FileName>.*@\1@")
 
 echo $filename
 echo '====================================='
@@ -57,7 +57,7 @@ esac
     
 
 # generate new hash value
-generated_fixity=$($hashfunction ./temp_data/$1 | sed -r 's:\\*([^ ]*).*:\1:')
+generated_fixity=$($hashfunction ./temp_data/$2 | sed -r 's:\\*([^ ]*).*:\1:')
 
 
 # compare computed hash with stored hash from metadata
@@ -76,6 +76,6 @@ elif [ "$stored_fixity" != "$generated_fixity" ];
 fi
 
 
-# remove line below to prevent deletion
-rm -r ./temp_data
+# uncomment next line to delete working files after report
+#rm -r ./temp_data
 
